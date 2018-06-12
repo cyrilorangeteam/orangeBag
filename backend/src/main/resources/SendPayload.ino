@@ -19,66 +19,59 @@
 
 #define debugSerial SerialUSB
 
-#define DHTPIN A8     // what pin we're connected to
+#define DHTPIN A8;     // what pin we're connected to
+#define DHTPIN A0;
 
-// The following keys are for structure purpose only. You must define YOUR OWN. 
+// The following keys are for structure purpose only. You must define YOUR OWN.
 const uint8_t appEUI[8] = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
 const uint8_t appKey[16] = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
 
 bool first = true;
-bool res = false;  
+bool res = false;
 bool joinNetwork()
-{             
+{
+
+  debugSerial.println("Join Request");
   OrangeForRN2483.setDataRate(DATA_RATE_3); // Set DataRate to SF11/125Khz
   return OrangeForRN2483.joinNetwork(appEUI, appKey);
 }
 
 void setup() {
-  debugSerial.begin(57600); 
-  
+  debugSerial.begin(57600);
+  pinMode(A0, OUTPUT);
   while ((!debugSerial) && (millis() < 10000)) ;
-
   OrangeForRN2483.init();
-  
-   res = joinNetwork();
+  res = joinNetwork();
 }
 
 void loop() {
+      debugSerial.println("Buzzer Request");
+      uint8_t lightValue = analogRead(A8);
+      debugSerial.println(lightValue);
+      if(lightValue>150){
+          digitalWrite(A0, HIGH);
+          delay(1000);
+          digitalWrite(A0, LOW);
+      }
+
+          delay(2000);
 
   {
-    debugSerial.println("Join Request");
     if(res)
     {
       debugSerial.println("Join Success");
       OrangeForRN2483.enableAdr();
-
-      uint8_t lightValue = analogRead(A8);
-      SerialUSB.println(lightValue);
-
-
-  const uint8_t size = 4;
-  uint8_t port = 5;
-  uint8_t data[size] = { lightValue }; // Hello
-LpwaOrangeEncoder.flush();
-LpwaOrangeEncoder.addUInt(lightValue);
-
-
-
-
-    int8_t len;
-    uint8_t* frame = LpwaOrangeEncoder.getFramePayload(&len);
-    bool res = OrangeForRN2483.sendMessage(frame, len, port);
-
-
-    
-
- // OrangeForRN2483.sendMessage(data, size, port); // send unconfirmed message
-
-      delay(20000);
-      }else debugSerial.println("Join Failed");
-    debugSerial.println("Program Finished");
+      const uint8_t size = 4;
+      uint8_t port = 5;
+      uint8_t data[size] = { lightValue }; // Hello
+      LpwaOrangeEncoder.flush();
+      LpwaOrangeEncoder.addUInt(lightValue);
+      int8_t len;
+      uint8_t* frame = LpwaOrangeEncoder.getFramePayload(&len);
+      bool sent = OrangeForRN2483.sendMessage(frame, len, port);
+      if(sent){delay(20000);}
+      else delay(5000);
+      }
+      else debugSerial.println("Join Failed");
   }
 }
-
-
-
