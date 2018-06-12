@@ -7,6 +7,7 @@
  */
 package backend;
 
+import backend.SMS.SmsSender;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
@@ -21,6 +22,7 @@ import java.util.UUID;
 public class Sample_11_SimpleAppConsumeFifo {
 
     final static String TOPIC_FIFO = "fifo/hackathon-queue-kit-7";
+    static boolean isdark = true;
 
     /**
      * Basic "MqttCallback" that handles messages as JSON device commands,
@@ -39,6 +41,19 @@ public class Sample_11_SimpleAppConsumeFifo {
 
         public void messageArrived(String s, MqttMessage mqttMessage) throws Exception {
             System.out.println("Received message from FIFO queue - " + mqttMessage);
+            String string1 = mqttMessage.toString();
+            string1 = string1.substring(string1.indexOf("\"lightvalue\":"));
+            string1 = string1.substring(string1.indexOf(':')+1, string1.indexOf('}'));
+            System.out.print(string1);
+            int f = Integer.parseInt(string1);
+            if ( isdark && f > 120) {
+                isdark = false;
+                SmsSender.main();
+            }
+            if (!isdark && f<120) {
+                isdark = true;
+            }
+
         }
 
         public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
