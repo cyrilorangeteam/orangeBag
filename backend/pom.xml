@@ -28,6 +28,12 @@
             <version>2.7</version>
             
         </dependency>
+      <!-- Twilio-->
+      <dependency>
+          <groupId>com.twilio.sdk</groupId>
+          <artifactId>twilio</artifactId>
+          <version>7.17.0</version>
+      </dependency>
   
   </dependencies>
   
