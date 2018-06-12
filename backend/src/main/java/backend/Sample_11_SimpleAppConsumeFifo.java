@@ -66,7 +66,7 @@ public class Sample_11_SimpleAppConsumeFifo {
 
         String API_KEY = "c40025a75fa0411a80defa6510e40d31"; // <-- REPLACE!
 
-        String SERVER = "tcp://liveobjects.orange-business.com:1883";
+        String SERVER = "ws://liveobjects.orange-business.com:80/mqtt";
         String APP_ID = "app:" + UUID.randomUUID().toString();
         int KEEP_ALIVE_INTERVAL = 30;// Must be <= 50
 
