@@ -22,12 +22,18 @@
 #define DHTPIN A8;     // what pin we're connected to
 #define DHTPIN A0;
 
+#define DHTPIN A1;
+
 // The following keys are for structure purpose only. You must define YOUR OWN.
 const uint8_t appEUI[8] = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
 const uint8_t appKey[16] = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
 
 bool first = true;
 bool res = false;
+bool activated = false;
+int currentVal = 1;
+const int buttonPort = 4;
+int buttonRead;
 bool joinNetwork()
 {
 
@@ -39,27 +45,26 @@ bool joinNetwork()
 void setup() {
   debugSerial.begin(57600);
   pinMode(A0, OUTPUT);
+  pinMode(buttonPort, INPUT);
   while ((!debugSerial) && (millis() < 10000)) ;
   OrangeForRN2483.init();
   res = joinNetwork();
 }
 
 void loop() {
-      debugSerial.println("Buzzer Request");
+
+if(activated){
       uint8_t lightValue = analogRead(A8);
-      debugSerial.println(lightValue);
       if(lightValue>150){
+          debugSerial.println("light is high");
           digitalWrite(A0, HIGH);
-          delay(1000);
+          delay(2000);
           digitalWrite(A0, LOW);
       }
 
-          delay(2000);
 
-  {
     if(res)
     {
-      debugSerial.println("Join Success");
       OrangeForRN2483.enableAdr();
       const uint8_t size = 4;
       uint8_t port = 5;
@@ -68,10 +73,45 @@ void loop() {
       LpwaOrangeEncoder.addUInt(lightValue);
       int8_t len;
       uint8_t* frame = LpwaOrangeEncoder.getFramePayload(&len);
-      bool sent = OrangeForRN2483.sendMessage(frame, len, port);
-      if(sent){delay(20000);}
-      else delay(5000);
+
+      debugSerial.println(currentVal);
+      debugSerial.println(lightValue);
+      if((currentVal-lightValue) > 10){
+              debugSerial.println("More than 10 ");
+              bool sent = OrangeForRN2483.sendMessage(frame, len, port);
+              if(sent){
+                delay(5000);
+                currentVal = lightValue;
+                }
+
       }
-      else debugSerial.println("Join Failed");
-  }
-}
+      if ((lightValue-currentVal) > 10){
+              debugSerial.println("More than 10 ");
+              bool sent = OrangeForRN2483.sendMessage(frame, len, port);
+              if(sent){
+                delay(5000);
+                currentVal = lightValue;
+                }
+      }
+      }
+
+      else {debugSerial.println("Join Failed");}
+
+      } else {
+        debugSerial.println("Not Activated");
+      }
+
+
+        delay(1000);
+
+   buttonRead = digitalRead(buttonPort);
+    if(buttonRead == 1){
+          debugSerial.println("button read : ");
+          debugSerial.println(buttonRead);
+      if(activated){
+          activated = false;
+      } else activated = true;
+    }
+
+      }
+
